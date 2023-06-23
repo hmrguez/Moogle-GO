@@ -15,12 +15,25 @@ func preprocessTexts(text string) *Trie {
 	return prepareTrie(splitText)
 }
 
-func prepareTrie(text []string) *Trie{
+func prepareTrie(text []string) *Trie {
 	var trie = NewTrie()
 
-	for _, word := range text{
+	for _, word := range text {
 		trie.Insert(word)
 	}
 
 	return trie
+}
+
+func getBooks() []Book {
+	var files = readFiles()
+	var books []Book
+
+	for _, file := range files {
+		var trie = preprocessTexts(file[1])
+		var newBook = Book{title: file[0], content: trie}
+		books = append(books, newBook)
+	}
+
+	return books
 }

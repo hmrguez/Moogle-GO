@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"sync"
 )
 
 func preprocessTexts(text string) *Trie {
@@ -26,13 +27,28 @@ func prepareTrie(text []string) *Trie {
 }
 
 func getBooks() []Book {
-	var files = readFiles()
-	var books []Book
+	files := readFiles()
+	booksChan := make(chan Book)
+	var wg sync.WaitGroup
 
 	for _, file := range files {
-		var trie = preprocessTexts(file[1])
-		var newBook = Book{title: file[0], content: trie}
-		books = append(books, newBook)
+		wg.Add(1)
+		go func(file [2]string) {
+			defer wg.Done()
+			trie := preprocessTexts(file[1])
+			newBook := Book{title: file[0], content: trie}
+			booksChan <- newBook
+		}(file)
+	}
+
+	go func() {
+		wg.Wait()
+		close(booksChan)
+	}()
+
+	var books []Book
+	for book := range booksChan {
+		books = append(books, book)
 	}
 
 	return books
